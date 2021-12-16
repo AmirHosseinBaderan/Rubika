@@ -11,6 +11,7 @@ internal static class CryptoEx
 {
     private static readonly byte[] IV = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
+    [Obsolete]
     private static AesCryptoServiceProvider _aesCrypto;
 
     private static ICryptoTransform _cryptoTransform;
@@ -28,10 +29,9 @@ internal static class CryptoEx
 
             if (sb[i] >= 'a' && sb[i] <= 'z')
                 sb[i] = (char)((((str[i] - 'a') + 9) % 26) + 97);
-
         }
 
-        byte[] key = ASCIIEncoding.ASCII.GetBytes(new String(sb));
+        byte[] key = Encoding.ASCII.GetBytes(new String(sb));
         _aesCrypto = new()
         {
             BlockSize = 128,
