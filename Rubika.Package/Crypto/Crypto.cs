@@ -15,8 +15,6 @@ internal static class CryptoEx
 
     private static ICryptoTransform _cryptoTransform;
 
-    private static List<Message> _messages = new();
-
     public static byte[] CreateAndSetKey(this string auth)
     {
         string str = auth[16..][..8] + auth[..8] + auth[24..] + auth[8..][..8];
@@ -26,13 +24,11 @@ internal static class CryptoEx
         for (int i = 0; i < sb.Length; i++)
         {
             if (sb[i] >= '0' && sb[i] <= '9')
-            {
                 sb[i] = (char)((((str[i] - '0') + 5) % 10) + 48);
-            }
+
             if (sb[i] >= 'a' && sb[i] <= 'z')
-            {
                 sb[i] = (char)((((str[i] - 'a') + 9) % 26) + 97);
-            }
+
         }
 
         byte[] key = ASCIIEncoding.ASCII.GetBytes(new String(sb));
@@ -57,14 +53,14 @@ internal static class CryptoEx
         {
             data = data.Replace("\\n", "\n");
             _cryptoTransform = _aesCrypto.CreateDecryptor(_aesCrypto.Key, _aesCrypto.IV);
-            return Encoding.UTF8.GetString(_cryptoTransform.TransformFinalBlock(Convert.FromBase64String(data), 0, Convert.FromBase64String(data).Length));
+            byte[] dataBytes = Convert.FromBase64String(data);
+            return Encoding.UTF8.GetString(_cryptoTransform.TransformFinalBlock(dataBytes, 0, dataBytes.Length));
         }
-        else
-        {
-            byte[] f = data.GetBytes();
-            _cryptoTransform = _aesCrypto.CreateEncryptor(_aesCrypto.Key, _aesCrypto.IV);
-            return Convert.ToBase64String(_cryptoTransform.TransformFinalBlock(f, 0, f.Length));
-        }
+
+        byte[] f = data.GetBytes();
+        _cryptoTransform = _aesCrypto.CreateEncryptor(_aesCrypto.Key, _aesCrypto.IV);
+        byte[] transform = _cryptoTransform.TransformFinalBlock(f, 0, f.Length);
+        return Convert.ToBase64String(transform);
     }
 
 }
