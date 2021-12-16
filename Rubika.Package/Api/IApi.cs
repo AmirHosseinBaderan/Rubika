@@ -2,5 +2,5 @@
 
 internal interface IApi
 {
-    Task<string> SendRequestAsync(string url,byte[] data);
+    Task<string> SendRequestAsync(string url, byte[] data);
 }

@@ -15,21 +15,21 @@ public interface IBot
 
     Task<string> GetGuidFromUserNameAsync(string userName);
 
-    Task DeleteMessageAsync(string messageId,string gapToken);
+    Task DeleteMessageAsync(string messageId, string gapToken);
 
-    Task SendMessageAsync(string text,string replyId, string gapToken);
+    Task SendMessageAsync(string text, string replyId, string gapToken);
 
-    Task EditMessageAsync(string text,string messageId,string gapToken);
+    Task EditMessageAsync(string text, string messageId, string gapToken);
 
-    Task SendLocationAsync(double x,double y,string gapToken);
+    Task SendLocationAsync(double x, double y, string gapToken);
 
-    Task<Message> GetMessageByIdAsync(string messageId,string gapToken);
+    Task<Message> GetMessageByIdAsync(string messageId, string gapToken);
 
-    Task RemoveUserAsync(string userToken,string gapToken);
+    Task RemoveUserAsync(string userToken, string gapToken);
 
     Task UnRemoveUserAsync(string userToken, string gapToken);
 
-    Task NewAdminAsync(string userToken,string[] access,string gapToken);
+    Task NewAdminAsync(string userToken, string[] access, string gapToken);
 
     Task RemoveAdminAsync(string adminToken, string gapToken);
 

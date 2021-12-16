@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Rubika.Package.Api;
+﻿namespace Rubika.Package.Api;
 
 internal class Api : IApi, IDisposable
 {
