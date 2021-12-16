@@ -1,4 +1,6 @@
-﻿namespace Rubika.Package.Api;
+﻿using System;
+
+namespace Rubika.Package.Api;
 
 internal class Api : IApi, IDisposable
 {
@@ -16,8 +18,9 @@ internal class Api : IApi, IDisposable
                     request.Method = "POST";
                     request.ContentType = "application/json; charset=UTF-8";
                     request.ContentLength = data.Length;
-                    request.GetRequestStream().Write(data, 0, data.Length);
-                    using StreamReader sr = new(request.GetResponse().GetResponseStream());
+                    await request.GetRequestStream().WriteAsync(data);
+                    Stream responseStream = request.GetResponse().GetResponseStream();
+                    using StreamReader sr = new(responseStream);
                     return await sr.ReadToEndAsync();
                 }
                 catch
