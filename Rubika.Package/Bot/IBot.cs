@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Rubika.Package.Bot;
 
-namespace Rubika.Package.Bot;
-
+/// <summary>
+/// Rubika Bot Services Interface
+/// </summary>
 public interface IBot
 {
     Task CreateBotAsync(Action<Message> message, string gapToken);

@@ -1,17 +1,9 @@
-﻿using Rubika.Package.Bot;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Rubika.Package.Crypto;
+﻿namespace Rubika.Package.Crypto;
 
 internal static class CryptoEx
 {
     private static readonly byte[] IV = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    [Obsolete]
     private static AesCryptoServiceProvider _aesCrypto;
 
     private static ICryptoTransform _cryptoTransform;

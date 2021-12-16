@@ -1,13 +1,8 @@
-﻿using Rubika.Package.Api;
-using Rubika.Package.Crypto;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Rubika.Package.Bot;
 
-namespace Rubika.Package.Bot;
-
+/// <summary>
+/// Rubika Bot Services Implement <see cref="IBot"/>
+/// </summary>
 public class Bot : IBot, IDisposable
 {
 
@@ -17,7 +12,7 @@ public class Bot : IBot, IDisposable
 
     private string _gapToken;
 
-    private string _auth;
+    private readonly string _auth;
 
     private readonly IApi _api;
 
@@ -35,11 +30,11 @@ public class Bot : IBot, IDisposable
 
     #endregion
 
-    public async Task CreateBotAsync(Action<Message> getMessage, string gapToken)
+    public async Task CreateBotAsync(Action<Message> newMessage, string gapToken)
         => await Task.Run(() =>
         {
             _gapToken = gapToken;
-            _onGetMessage = getMessage;
+            _onGetMessage = newMessage;
             new Thread(GetMessage).Start();
         });
 
@@ -296,7 +291,6 @@ public class Bot : IBot, IDisposable
                 return responseData["join_linl"].ToString();
             });
 
-
     #region -- Data --
 
     private async Task<string> CreateDataV4Async(string data, string method)
@@ -324,14 +318,14 @@ public class Bot : IBot, IDisposable
             };
 
             string dataEnc = json.ToString().Crypto(false);
-            json.RemoveAll();
-            json = new()
+
+            JObject jsonData = new()
             {
                 { "api_version", 5 },
                 { "auth", _auth },
                 { "data_enc", dataEnc }
             };
-            return json.ToString();
+            return jsonData.ToString();
         });
 
     #endregion
