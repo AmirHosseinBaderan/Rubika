@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Company>Fteam</Company>
+    <Product>Rubika.Bot</Product>
+    <Copyright>Apache</Copyright>
+    <PackageProjectUrl>https://github.com/Amir-Hossin-pr/Rubika</PackageProjectUrl>
+    <PackageIcon>iphone_home120.png</PackageIcon>
+    <RepositoryUrl>https://github.com/Amir-Hossin-pr/Rubika</RepositoryUrl>
+    <RepositoryType>public</RepositoryType>
+    <PackageTags>Rubika Bot </PackageTags>
+    <Version>1.0.2</Version>
+    <Authors>Fteam</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\iphone_home120.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+</Project>
