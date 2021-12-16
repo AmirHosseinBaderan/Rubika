@@ -59,29 +59,31 @@ public class Bot : IBot, IDisposable
                 {
                     string dataReq = await CreateDataV4Async(json.ToString(), "getMessages");
                     string req = await _api.SendRequestAsync(_url, dataReq.GetBytes());
-                    JObject resJson = JObject.Parse(req);
-                    JObject decDataEnc = JObject.Parse(resJson["data_enc"].ToString().Crypto(true));
-                    JArray messages = JArray.Parse(decDataEnc["messages"].ToString());
-                    foreach (JObject message in messages)
-                        if (!_messages.Any(m => m.Id == message.SelectToken("message_id").ToString()))
-                        {
-                            Message newMessage = new()
+                    JObject decDataEnc = await _api.ConvertToJObjectAsync(req);
+                    if (!decDataEnc.ContainsKey("err"))
+                    {
+                        JArray messages = JArray.Parse(decDataEnc["messages"].ToString());
+                        foreach (JObject message in messages)
+                            if (!_messages.Any(m => m.Id == message.SelectToken("message_id").ToString()))
                             {
-                                Id = message["message_id"].ToString(),
-                                SenderToken = message["author_object_guid"].ToString()
-                            };
-                            if (message.ContainsKey("text"))
-                                newMessage.Text = message["text"].ToString();
-                            if (message.ContainsKey("reply_to_message_id"))
-                                newMessage.ReplyId = message["reply_to_message_id"].ToString();
+                                Message newMessage = new()
+                                {
+                                    Id = message["message_id"].ToString(),
+                                    SenderToken = message["author_object_guid"].ToString()
+                                };
+                                if (message.ContainsKey("text"))
+                                    newMessage.Text = message["text"].ToString();
+                                if (message.ContainsKey("reply_to_message_id"))
+                                    newMessage.ReplyId = message["reply_to_message_id"].ToString();
 
-                            _onGetMessage(newMessage);
-                            _messages.Add(newMessage);
-                        }
+                                _onGetMessage(newMessage);
+                                _messages.Add(newMessage);
+                            }
 
-                    json.Remove("min_id");
-                    json.Add("min_id", _messages[^1].Id);
-                    Thread.Sleep(500);
+                        json.Remove("min_id");
+                        json.Add("min_id", _messages[^1].Id);
+                    }
+                    Thread.Sleep(600);
                 }
             }).Wait();
 
@@ -92,7 +94,7 @@ public class Bot : IBot, IDisposable
             reqData = reqData.Replace("gToken", gapToken);
             string strData = await CreateDataV4Async(reqData, "getGroupInfo");
             string apiCall = await _api.SendRequestAsync(_url, strData.GetBytes());
-            JObject response = JObject.Parse(JObject.Parse(apiCall).SelectToken("data_enc").ToString().Crypto(true));
+            JObject response = await _api.ConvertToJObjectAsync(apiCall);
             return response.SelectToken("chat").SelectToken("last_message").SelectToken("message_id").ToString();
         });
 

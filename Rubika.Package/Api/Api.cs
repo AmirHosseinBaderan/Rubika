@@ -1,9 +1,22 @@
-﻿using System;
-
-namespace Rubika.Package.Api;
+﻿namespace Rubika.Package.Api;
 
 internal class Api : IApi, IDisposable
 {
+    public async Task<JObject> ConvertToJObjectAsync(string response)
+            => await Task.Run(() =>
+            {
+                if (response != "")
+                {
+                    JObject resObject = JObject.Parse(response);
+                    string encData = resObject["data_enc"].ToString().Crypto(true);
+                    return JObject.Parse(encData);
+                }
+                return new JObject()
+                {
+                    {"err",true }
+                };
+            });
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);
