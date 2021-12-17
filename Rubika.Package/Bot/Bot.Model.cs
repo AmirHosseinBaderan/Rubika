@@ -68,6 +68,8 @@ public record SeenChat(string GapToken, string MessageId);
 
 public record GetMessage(ActionStatus Status, Message Message);
 
+public record GetUpdatesChats(ActionStatus Status,IEnumerable<Chat> Chats);
+
 public enum ActionStatus
 {
     Success,
