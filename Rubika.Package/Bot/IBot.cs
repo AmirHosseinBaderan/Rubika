@@ -45,7 +45,7 @@ public interface IBot
 
     Task SeenCahtAsync(SeenChat seenChat);
 
-    Task<IEnumerable<Chat>> GetChatsUpdatesAsync(string state);
+    Task<GetUpdatesChats> GetChatsUpdatesAsync(string state);
 
     Task<string> GetGroupLinkAsync(string gapToken);
 

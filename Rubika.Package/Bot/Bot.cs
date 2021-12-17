@@ -305,31 +305,38 @@ public class Bot : IBot, IDisposable
                 await _api.SendRequestAsync(_url, v4Data.GetBytes());
             });
 
-    public async Task<IEnumerable<Chat>> GetChatsUpdatesAsync(string state)
+    public async Task<GetUpdatesChats> GetChatsUpdatesAsync(string state)
             => await Task.Run(async () =>
             {
-                JObject input = new()
+                try
                 {
-                    { "state", state }
-                };
-                string v4Data = await CreateDataV4Async(input.ToString(), "getChatsUpdates");
-                string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-                JObject response = await _api.ConvertToJObjectAsync(request);
-                JArray chats = JArray.Parse(response["chats"].ToString());
-                List<Chat> result = new();
-                foreach (var chat in chats)
-                    result.Add(new()
+                    JObject input = new()
                     {
-                        TimeStamp = int.Parse(chat["time"]?.ToString() ?? "0"),
-                        ObjectGuid = chat["object_guid"]?.ToString(),
-                        CountUnseen = int.Parse(chat["count_unseen"]?.ToString() ?? "0"),
-                        IsPined = bool.Parse(chat["is_pinned"]?.ToString() ?? "false"),
-                        IsMute = bool.Parse(chat["is_mute"]?.ToString() ?? "false"),
-                        LastMessage = CreateMessage(chat["last_message"].ToString()),
-                        Access = JArray.Parse(chat["access"].ToString()).ToList().Select(acc => acc.ToString()),
-                        Status = chat["status"]?.ToString(),
-                    });
-                return result;
+                        { "state", state }
+                    };
+                    string v4Data = await CreateDataV4Async(input.ToString(), "getChatsUpdates");
+                    string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
+                    JObject response = await _api.ConvertToJObjectAsync(request);
+                    JArray chats = JArray.Parse(response["chats"].ToString());
+                    List<Chat> result = new();
+                    foreach (var chat in chats)
+                        result.Add(new()
+                        {
+                            TimeStamp = int.Parse(chat["time"]?.ToString() ?? "0"),
+                            ObjectGuid = chat["object_guid"]?.ToString(),
+                            CountUnseen = int.Parse(chat["count_unseen"]?.ToString() ?? "0"),
+                            IsPined = bool.Parse(chat["is_pinned"]?.ToString() ?? "false"),
+                            IsMute = bool.Parse(chat["is_mute"]?.ToString() ?? "false"),
+                            LastMessage = CreateMessage(chat["last_message"].ToString()),
+                            Access = JArray.Parse(chat["access"].ToString()).ToList().Select(acc => acc.ToString()),
+                            Status = chat["status"]?.ToString(),
+                        });
+                    return new GetUpdatesChats(ActionStatus.Success, result);
+                }
+                catch
+                {
+                    return new GetUpdatesChats(ActionStatus.Exception, null);
+                }
             });
 
     #region -- Data --
