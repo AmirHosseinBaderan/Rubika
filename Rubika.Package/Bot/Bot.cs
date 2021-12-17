@@ -297,6 +297,41 @@ public class Bot : IBot, IDisposable
                 return responseData["join_linl"].ToString();
             });
 
+    public async Task SeenCahtAsync(SeenChat seenChat)
+            => await Task.Run(async () =>
+            {
+                JObject input = JObject.Parse("{\"seen_list\" : {\"" + seenChat.GapToken + "\":\"" + seenChat.MessageId + "\"}}");
+                string v4Data = await CreateDataV4Async(input.ToString(), "seenChats");
+                await _api.SendRequestAsync(_url, v4Data.GetBytes());
+            });
+
+    public async Task<IEnumerable<Chat>> GetChatsUpdatesAsync(string state)
+            => await Task.Run(async () =>
+            {
+                JObject input = new()
+                {
+                    { "state", state }
+                };
+                string v4Data = await CreateDataV4Async(input.ToString(), "getChatsUpdates");
+                string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
+                JObject response = await _api.ConvertToJObjectAsync(request);
+                JArray chats = JArray.Parse(response["chats"].ToString());
+                List<Chat> result = new();
+                foreach (var chat in chats)
+                    result.Add(new()
+                    {
+                        TimeStamp = int.Parse(chat["time"]?.ToString() ?? "0"),
+                        ObjectGuid = chat["object_guid"]?.ToString(),
+                        CountUnseen = int.Parse(chat["count_unseen"]?.ToString() ?? "0"),
+                        IsPined = bool.Parse(chat["is_pinned"]?.ToString() ?? "false"),
+                        IsMute = bool.Parse(chat["is_mute"]?.ToString() ?? "false"),
+                        LastMessage = CreateMessage(chat["last_message"].ToString()),
+                        Access = JArray.Parse(chat["access"].ToString()).ToList().Select(acc => acc.ToString()),
+                        Status = chat["status"]?.ToString(),
+                    });
+                return result;
+            });
+
     #region -- Data --
 
     private async Task<string> CreateDataV4Async(string data, string method)
@@ -333,6 +368,18 @@ public class Bot : IBot, IDisposable
 
     private static JObject CreateClient()
         => JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Android\"}");
+
+    private static Message CreateMessage(string json)
+    {
+        JObject jObject = JObject.Parse(json);
+        return new Message
+        {
+            Id = jObject["message_id"]?.ToString(),
+            Text = jObject["text"]?.ToString(),
+            ReplyId = jObject["reply_to_message_id"]?.ToString(),
+            SenderToken = jObject["author_object_guid"]?.ToString()
+        };
+    }
 
     #endregion
 }
