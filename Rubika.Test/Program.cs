@@ -1,4 +1,5 @@
 ﻿using Rubika.Package.Bot;
+using Rubika.Package.Model;
 
 string _auth = ".";
 string _gapToken = ".";
