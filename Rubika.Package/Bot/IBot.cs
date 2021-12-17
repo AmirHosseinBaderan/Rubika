@@ -1,4 +1,6 @@
-﻿namespace Rubika.Package.Bot;
+﻿using Rubika.Package.Model;
+
+namespace Rubika.Package.Bot;
 
 /// <summary>
 /// Rubika Bot Services Interface
@@ -45,7 +47,7 @@ public interface IBot
 
     Task SeenCahtAsync(SeenChat seenChat);
 
-    Task<GetUpdatesChats> GetChatsUpdatesAsync(string state);
+    Task<GetUpdatesChats> GetChatsUpdatesAsync(string timeStamp);
 
     Task<string> GetGroupLinkAsync(string gapToken);
 

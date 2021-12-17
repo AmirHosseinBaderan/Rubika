@@ -1,4 +1,6 @@
-﻿namespace Rubika.Package.Bot;
+﻿using Rubika.Package.Model;
+
+namespace Rubika.Package.Bot;
 
 /// <summary>
 /// Rubika Bot Services Implement <see cref="IBot"/>
@@ -305,32 +307,22 @@ public class Bot : IBot, IDisposable
                 await _api.SendRequestAsync(_url, v4Data.GetBytes());
             });
 
-    public async Task<GetUpdatesChats> GetChatsUpdatesAsync(string state)
+    public async Task<GetUpdatesChats> GetChatsUpdatesAsync(string timeStamp)
             => await Task.Run(async () =>
             {
                 try
                 {
                     JObject input = new()
                     {
-                        { "state", state }
+                        { "state", timeStamp }
                     };
                     string v4Data = await CreateDataV4Async(input.ToString(), "getChatsUpdates");
                     string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
                     JObject response = await _api.ConvertToJObjectAsync(request);
                     JArray chats = JArray.Parse(response["chats"].ToString());
                     List<Chat> result = new();
-                    foreach (var chat in chats)
-                        result.Add(new()
-                        {
-                            TimeStamp = int.Parse(chat["time"]?.ToString() ?? "0"),
-                            ObjectGuid = chat["object_guid"]?.ToString(),
-                            CountUnseen = int.Parse(chat["count_unseen"]?.ToString() ?? "0"),
-                            IsPined = bool.Parse(chat["is_pinned"]?.ToString() ?? "false"),
-                            IsMute = bool.Parse(chat["is_mute"]?.ToString() ?? "false"),
-                            LastMessage = CreateMessage(chat["last_message"].ToString()),
-                            Access = JArray.Parse(chat["access"].ToString()).ToList().Select(acc => acc.ToString()),
-                            Status = chat["status"]?.ToString(),
-                        });
+                    foreach (JToken chat in chats)
+                        result.Add(ModelBinder.CreateChat(chat));
                     return new GetUpdatesChats(ActionStatus.Success, result);
                 }
                 catch
@@ -375,18 +367,6 @@ public class Bot : IBot, IDisposable
 
     private static JObject CreateClient()
         => JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Android\"}");
-
-    private static Message CreateMessage(string json)
-    {
-        JObject jObject = JObject.Parse(json);
-        return new Message
-        {
-            Id = jObject["message_id"]?.ToString(),
-            Text = jObject["text"]?.ToString(),
-            ReplyId = jObject["reply_to_message_id"]?.ToString(),
-            SenderToken = jObject["author_object_guid"]?.ToString()
-        };
-    }
 
     #endregion
 }
