@@ -5,7 +5,13 @@
 /// </summary>
 public interface IBot
 {
-    Task CreateBotAsync(Action<Message> message, string gapToken);
+    /// <summary>
+    /// Create Bot And Get New Messages Real-Time
+    /// </summary>
+    /// <param name="message">New Message Call Back</param>
+    /// <param name="gapToken">Gap Token</param>
+    /// <returns><see cref="Package.Bot.GetMessage"/></returns>
+    Task CreateBotAsync(Action<GetMessage> message, string gapToken);
 
     Task<string> GetMinIdAsync(string gapToken);
 
