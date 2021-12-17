@@ -65,7 +65,7 @@ public class Bot : IBot, IDisposable
                 {
                     JArray messages = JArray.Parse(decDataEnc["messages"].ToString());
                     foreach (JObject message in messages)
-                        if (!_messages.Any(m => m.Id == message.SelectToken("message_id").ToString()))
+                        if (!_messages.Any(m => m.Id == message["message_id"].ToString()))
                         {
                             Message newMessage = new()
                             {
@@ -103,7 +103,7 @@ public class Bot : IBot, IDisposable
             string strData = await CreateDataV4Async(reqData, "getGroupInfo");
             string apiCall = await _api.SendRequestAsync(_url, strData.GetBytes());
             JObject response = await _api.ConvertToJObjectAsync(apiCall);
-            return response.SelectToken("chat").SelectToken("last_message").SelectToken("message_id").ToString();
+            return response["chat"]["last_message"]["message_id"].ToString();
         });
 
     public async Task<string> GetGroupTokenFromLinkAsync(string link)
@@ -112,7 +112,7 @@ public class Bot : IBot, IDisposable
             string json = await CreateDataV4Async("{\"hash_link\":\"" + link.Replace("https://rubika.ir/joing/", "") + "\"}", "groupPreviewByJoinLink");
             string request = await _api.SendRequestAsync(_url, json.GetBytes());
             JObject response = JObject.Parse(request);
-            return JObject.Parse(response["data_enc"].ToString().Crypto(true))["group"]["group_guid"].ToString();
+            return JObject.Parse(response["data_enc"].Crypto(true))["group"]["group_guid"].ToString();
         });
 
     public async Task<UserInof> GetUserInfoAsync(string userToken)
@@ -120,7 +120,7 @@ public class Bot : IBot, IDisposable
         {
             string createData = await CreateDataV4Async("{\"user_guid\":\"" + userToken + "\"}", "getUserInfo");
             string request = await _api.SendRequestAsync(_url, createData.GetBytes());
-            string response = JObject.Parse(request)["data_enc"].ToString().Crypto(true);
+            string response = JObject.Parse(request)["data_enc"].Crypto(true);
             JObject resObject = JObject.Parse(response);
             JToken user = resObject["user"];
             return new UserInof()
@@ -137,7 +137,7 @@ public class Bot : IBot, IDisposable
         {
             string v4Data = await CreateDataV4Async("{\"username\":\"" + userName + "\"}", "getObjectByUsername");
             string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-            string response = JObject.Parse(request)["data_enc"].ToString().Crypto(true);
+            string response = JObject.Parse(request)["data_enc"].Crypto(true);
             JObject resJson = JObject.Parse(response);
             return resJson["user"]["user_guid"].ToString();
         });
@@ -201,9 +201,8 @@ public class Bot : IBot, IDisposable
             {
                 string v4Data = await CreateDataV4Async("{\"message_ids\":[\"" + messageId + "\"],\"object_guid\":\"" + gapToken + "\"}", "getMessagesByID");
                 string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-                string response = JObject.Parse(request)["data_enc"].ToString().Crypto(true);
+                string response = JObject.Parse(request)["data_enc"].Crypto(true);
                 JObject data = JObject.Parse(response);
-
                 JToken message = JArray.Parse(data["messages"].ToString())[0];
 
                 return new Message()
@@ -245,7 +244,7 @@ public class Bot : IBot, IDisposable
             => await Task.Run(async () =>
             {
                 JArray accessList = new();
-                foreach (var ac in access)
+                foreach (string ac in access)
                     accessList.Add(ac);
 
                 JObject json = new()
@@ -263,7 +262,6 @@ public class Bot : IBot, IDisposable
     public async Task RemoveAdminAsync(string adminToken, string gapToken)
         => await Task.Run(async () =>
         {
-
             JObject json = new()
             {
                 { "action", "UnsetAdmin" },
@@ -307,7 +305,7 @@ public class Bot : IBot, IDisposable
            {
                { "api_version", "4" },
                { "auth", _auth },
-               { "client", JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Android\"}") },
+               { "client", CreateClient() },
                { "data_enc", data.Crypto(false) },
                { "method", method }
            }.ToString());
@@ -317,12 +315,12 @@ public class Bot : IBot, IDisposable
         {
             JObject json = new()
             {
-                { "client", JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Android\"}") },
+                { "client", CreateClient() },
                 { "input", JObject.Parse(data) },
                 { "method", method }
             };
 
-            string dataEnc = json.ToString().Crypto(false);
+            string dataEnc = json.Crypto(false);
 
             JObject jsonData = new()
             {
@@ -332,6 +330,9 @@ public class Bot : IBot, IDisposable
             };
             return jsonData.ToString();
         });
+
+    private JObject CreateClient()
+        => JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Android\"}");
 
     #endregion
 }
