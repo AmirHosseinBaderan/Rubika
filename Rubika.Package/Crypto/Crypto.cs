@@ -23,7 +23,7 @@ internal static class CryptoEx
                 sb[i] = (char)((((str[i] - 'a') + 9) % 26) + 97);
         }
 
-        byte[] key = Encoding.ASCII.GetBytes(new String(sb));
+        byte[] key = ASCII.GetBytes(new string(sb));
         _aesCrypto = new()
         {
             BlockSize = 128,
@@ -37,25 +37,28 @@ internal static class CryptoEx
         return key;
     }
 
-    public static byte[] GetBytes(this string str) => Encoding.UTF8.GetBytes(str);
+    public static byte[] GetBytes(this string str) => UTF8.GetBytes(str);
 
     public static string Crypto(this string data, bool get)
-    {
-        if (get)
-        {
-            data = data.Replace("\\n", "\n");
-            _cryptoTransform = _aesCrypto.CreateDecryptor(_aesCrypto.Key, _aesCrypto.IV);
-            byte[] dataBytes = Convert.FromBase64String(data);
-            return Encoding.UTF8.GetString(_cryptoTransform.TransformFinalBlock(dataBytes, 0, dataBytes.Length));
-        }
-
-        byte[] f = data.GetBytes();
-        _cryptoTransform = _aesCrypto.CreateEncryptor(_aesCrypto.Key, _aesCrypto.IV);
-        byte[] transform = _cryptoTransform.TransformFinalBlock(f, 0, f.Length);
-        return Convert.ToBase64String(transform);
-    }
+            => get ? data.Encrypt() : data.Decrypt();
 
     public static string Crypto(this JToken json, bool get)
         => json.ToString().Crypto(get);
 
+    public static string Encrypt(this string data)
+    {
+        byte[] f = data.GetBytes();
+        _cryptoTransform = _aesCrypto.CreateEncryptor(_aesCrypto.Key, _aesCrypto.IV);
+        byte[] transform = _cryptoTransform.TransformFinalBlock(f, 0, f.Length);
+        return ToBase64String(transform);
+    }
+
+    public static string Decrypt(this string data)
+    {
+        data = data.Replace("\\n", "\n");
+        _cryptoTransform = _aesCrypto.CreateDecryptor(_aesCrypto.Key, _aesCrypto.IV);
+        byte[] dataBytes = FromBase64String(data);
+        byte[] transform = _cryptoTransform.TransformFinalBlock(dataBytes, 0, dataBytes.Length);
+        return UTF8.GetString(transform);
+    }
 }
