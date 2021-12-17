@@ -292,7 +292,7 @@ public class Bot : IBot, IDisposable
             {
                 string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "getGroupLink");
                 string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-                string response = JObject.Parse(request)["data_enc"].ToString().Crypto(true);
+                string response = JObject.Parse(request)["data_enc"].Crypto(true);
                 JObject responseData = JObject.Parse(response);
                 return responseData["join_linl"].ToString();
             });
@@ -331,7 +331,7 @@ public class Bot : IBot, IDisposable
             return jsonData.ToString();
         });
 
-    private JObject CreateClient()
+    private static JObject CreateClient()
         => JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Android\"}");
 
     #endregion
