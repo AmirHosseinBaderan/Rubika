@@ -41,6 +41,27 @@ public record AdminAccess
     public const string ChangeInfo = "ChangeInfo";
 }
 
+public record Chat
+{
+    public string ObjectGuid { get; set; }
+
+    public IEnumerable<string> Access { get; set; }
+
+    public int CountUnseen { get; set; }
+
+    public bool IsMute { get; set; }
+
+    public bool IsPined { get; set; }
+
+    public Message LastMessage { get; set; }
+
+    public string Status { get; set; }
+
+    public int TimeStamp { get; set; }
+}
+
+public record SeenChat(string GapToken, string MessageId);
+
 #endregion
 
 #region -- Response --
