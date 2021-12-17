@@ -11,7 +11,7 @@ internal static class CryptoEx
     public static byte[] CreateAndSetKey(this string auth)
     {
         string str = auth[16..][..8] + auth[..8] + auth[24..] + auth[8..][..8];
-        char[] sb = str.ToCharArray();
+        StringBuilder sb = new(str);
 
 
         for (int i = 0; i < sb.Length; i++)
@@ -23,7 +23,7 @@ internal static class CryptoEx
                 sb[i] = (char)((((str[i] - 'a') + 9) % 26) + 97);
         }
 
-        byte[] key = ASCII.GetBytes(new string(sb));
+        byte[] key = ASCII.GetBytes(sb.ToString());
         _aesCrypto = new()
         {
             BlockSize = 128,
@@ -40,7 +40,7 @@ internal static class CryptoEx
     public static byte[] GetBytes(this string str) => UTF8.GetBytes(str);
 
     public static string Crypto(this string data, bool get)
-            => get ? data.Encrypt() : data.Decrypt();
+            => get ? data.Decrypt() : data.Encrypt();
 
     public static string Crypto(this JToken json, bool get)
         => json.ToString().Crypto(get);
