@@ -21,3 +21,20 @@ public record UserInof
 
     public string UserName { get; set; }
 }
+
+public record AdminAccess
+{
+    public const string MemberAccess = "SetMemberAcess";
+
+    public const string JoinLink = "SetJoinLink";
+
+    public const string PinMessage = "PinMessage";
+
+    public const string SetAdmin = "SetAdmin";
+
+    public const string BanUser = "BanMember";
+
+    public const string DeleteMessage = "DeleteGlobalAllMessages";
+
+    public const string ChangeInfo = "ChangeInfo";
+}
