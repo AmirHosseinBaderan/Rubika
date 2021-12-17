@@ -117,10 +117,10 @@ public class Bot : IBot, IDisposable
             JToken user = resObject["user"];
             return new UserInof()
             {
-                Name = user["first_name"].ToString(),
-                LastName = user["last_name"].ToString(),
-                Bio = user["bio"].ToString(),
-                UserName = user["username"].ToString()
+                Name = user["first_name"]?.ToString(),
+                LastName = user["last_name"]?.ToString(),
+                Bio = user["bio"]?.ToString(),
+                UserName = user["username"]?.ToString()
             };
         });
 
@@ -193,20 +193,18 @@ public class Bot : IBot, IDisposable
             {
                 string v4Data = await CreateDataV4Async("{\"message_ids\":[\"" + messageId + "\"],\"object_guid\":\"" + gapToken + "\"}", "getMessagesByID");
                 string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-                string response = JObject.Parse(request).ToString().Crypto(true);
+                string response = JObject.Parse(request)["data_enc"].ToString().Crypto(true);
                 JObject data = JObject.Parse(response);
 
-                Message message = new()
-                {
-                    Id = data["id"].ToString(),
-                    SenderToken = data["author_object_guid"].ToString()
-                };
-                if (data.ContainsKey("text"))
-                    message.Text = data["text"].ToString();
-                if (data.ContainsKey("reply_to_message_id"))
-                    message.ReplyId = data["reply_to_message_id"].ToString();
+                JToken message = JArray.Parse(data["messages"].ToString())[0];
 
-                return message;
+                return new Message()
+                {
+                    Id = message["message_id"].ToString(),
+                    Text = message["text"]?.ToString(),
+                    ReplyId = message["reply_to_message_id"]?.ToString(),
+                    SenderToken = message["author_object_guid"]?.ToString()
+                };
             });
 
     public async Task RemoveUserAsync(string userToken, string gapToken)
@@ -297,17 +295,14 @@ public class Bot : IBot, IDisposable
 
     private async Task<string> CreateDataV4Async(string data, string method)
        => await Task.Run(() =>
-       {
-           JObject js = new()
+           new JObject
            {
                { "api_version", "4" },
                { "auth", _auth },
                { "client", JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Android\"}") },
                { "data_enc", data.Crypto(false) },
                { "method", method }
-           };
-           return js.ToString();
-       });
+           }.ToString());
 
     private async Task<string> CreateDataV5Async(string data, string method)
         => await Task.Run(() =>
