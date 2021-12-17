@@ -8,7 +8,7 @@ public class Bot : IBot, IDisposable
 
     #region -- Depedency --
 
-    private Action<Message> _onGetMessage;
+    private Action<GetMessage> _onGetMessage;
 
     private string _gapToken;
 
@@ -30,7 +30,7 @@ public class Bot : IBot, IDisposable
 
     #endregion
 
-    public async Task CreateBotAsync(Action<Message> newMessage, string gapToken)
+    public async Task CreateBotAsync(Action<GetMessage> newMessage, string gapToken)
         => await Task.Run(() =>
         {
             _gapToken = gapToken;
@@ -56,35 +56,44 @@ public class Bot : IBot, IDisposable
 
         while (true)
         {
-            string dataReq = CreateDataV4Async(json.ToString(), "getMessages").Result;
-            string req = _api.SendRequestAsync(_url, dataReq.GetBytes()).Result;
-            JObject decDataEnc = _api.ConvertToJObjectAsync(req).Result;
-            if (!decDataEnc.ContainsKey("err"))
+            try
             {
-                JArray messages = JArray.Parse(decDataEnc["messages"].ToString());
-                foreach (JObject message in messages)
-                    if (!_messages.Any(m => m.Id == message.SelectToken("message_id").ToString()))
-                    {
-                        Message newMessage = new()
+                string dataReq = CreateDataV4Async(json.ToString(), "getMessages").Result;
+                string req = _api.SendRequestAsync(_url, dataReq.GetBytes()).Result;
+                JObject decDataEnc = _api.ConvertToJObjectAsync(req).Result;
+                if (!decDataEnc.ContainsKey("err"))
+                {
+                    JArray messages = JArray.Parse(decDataEnc["messages"].ToString());
+                    foreach (JObject message in messages)
+                        if (!_messages.Any(m => m.Id == message.SelectToken("message_id").ToString()))
                         {
-                            Id = message["message_id"].ToString(),
-                            SenderToken = message["author_object_guid"].ToString()
-                        };
-                        if (message.ContainsKey("text"))
-                            newMessage.Text = message["text"].ToString();
-                        if (message.ContainsKey("reply_to_message_id"))
-                            newMessage.ReplyId = message["reply_to_message_id"].ToString();
+                            Message newMessage = new()
+                            {
+                                Id = message["message_id"].ToString(),
+                                SenderToken = message["author_object_guid"].ToString()
+                            };
+                            if (message.ContainsKey("text"))
+                                newMessage.Text = message["text"].ToString();
+                            if (message.ContainsKey("reply_to_message_id"))
+                                newMessage.ReplyId = message["reply_to_message_id"].ToString();
 
-                        _onGetMessage(newMessage);
-                        _messages.Add(newMessage);
-                    }
+                            _onGetMessage(new(ActionStatus.Success, newMessage));
+                            _messages.Add(newMessage);
+                        }
 
-                json.Remove("min_id");
-                json.Add("min_id", _messages[^1].Id);
+                    json.Remove("min_id");
+                    json.Add("min_id", _messages[^1].Id);
+                }
             }
+            catch
+            {
+                _onGetMessage(new(ActionStatus.Success, null));
+            }
+
             Thread.Sleep(600);
         }
     }
+
 
     public async Task<string> GetMinIdAsync(string gapToken)
         => await Task.Run(async () =>
