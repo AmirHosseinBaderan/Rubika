@@ -29,7 +29,7 @@ public interface IBot
 
     Task EditMessageAsync(string text, string messageId, string gapToken);
 
-    Task SendLocationAsync(double x, double y, string gapToken);
+    Task SendLocationAsync(double lat, double lon, string gapToken);
 
     Task<Message> GetMessageByIdAsync(string messageId, string gapToken);
 

@@ -33,4 +33,42 @@ internal class ModelBinder
             Status = json["status"]?.ToString(),
         };
 
+    #region -- Data --
+
+    public static async Task<string> CreateDataV4Async(string data, string method,string auth)
+       => await Task.Run(() =>
+           new JObject
+           {
+               { "api_version", "4" },
+               { "auth", auth },
+               { "client", CreateClient() },
+               { "data_enc", data.Crypto(false) },
+               { "method", method }
+           }.ToString());
+
+    public static async Task<string> CreateDataV5Async(string data, string method,string auth)
+        => await Task.Run(() =>
+        {
+            JObject json = new()
+            {
+                { "client", CreateClient() },
+                { "input", JObject.Parse(data) },
+                { "method", method }
+            };
+
+            string dataEnc = json.Crypto(false);
+
+            JObject jsonData = new()
+            {
+                { "api_version", 5 },
+                { "auth", auth },
+                { "data_enc", dataEnc }
+            };
+            return jsonData.ToString();
+        });
+
+    private static JObject CreateClient()
+        => JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Web\"}");
+
+    #endregion
 }

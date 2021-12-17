@@ -1,11 +1,12 @@
 ﻿using Rubika.Package.Model;
+using static Rubika.Package.Model.ModelBinder;
 
 namespace Rubika.Package.Bot;
 
 /// <summary>
 /// Rubika Bot Services Implement <see cref="IBot"/>
 /// </summary>
-public class Bot : IBot, IDisposable
+public partial class Bot : IBot, IDisposable
 {
 
     #region -- Depedency --
@@ -60,7 +61,7 @@ public class Bot : IBot, IDisposable
         {
             try
             {
-                string dataReq = CreateDataV4Async(json.ToString(), "getMessages").Result;
+                string dataReq = CreateDataV4Async(json.ToString(), "getMessages", _auth).Result;
                 string req = _api.SendRequestAsync(_url, dataReq.GetBytes()).Result;
                 JObject decDataEnc = _api.ConvertToJObjectAsync(req).Result;
                 if (!decDataEnc.ContainsKey("err"))
@@ -102,7 +103,7 @@ public class Bot : IBot, IDisposable
         {
             string reqData = "{\"group_guid\":\"gToken\"}";
             reqData = reqData.Replace("gToken", gapToken);
-            string strData = await CreateDataV4Async(reqData, "getGroupInfo");
+            string strData = await CreateDataV4Async(reqData, "getGroupInfo", _auth);
             string apiCall = await _api.SendRequestAsync(_url, strData.GetBytes());
             JObject response = await _api.ConvertToJObjectAsync(apiCall);
             return response["chat"]["last_message"]["message_id"].ToString();
@@ -111,7 +112,7 @@ public class Bot : IBot, IDisposable
     public async Task<string> GetGroupTokenFromLinkAsync(string link)
         => await Task.Run(async () =>
         {
-            string json = await CreateDataV4Async("{\"hash_link\":\"" + link.Replace("https://rubika.ir/joing/", "") + "\"}", "groupPreviewByJoinLink");
+            string json = await CreateDataV4Async("{\"hash_link\":\"" + link.Replace("https://rubika.ir/joing/", "") + "\"}", "groupPreviewByJoinLink", _auth);
             string request = await _api.SendRequestAsync(_url, json.GetBytes());
             JObject response = JObject.Parse(request);
             return JObject.Parse(response["data_enc"].Crypto(true))["group"]["group_guid"].ToString();
@@ -120,7 +121,7 @@ public class Bot : IBot, IDisposable
     public async Task<UserInof> GetUserInfoAsync(string userToken)
         => await Task.Run(async () =>
         {
-            string createData = await CreateDataV4Async("{\"user_guid\":\"" + userToken + "\"}", "getUserInfo");
+            string createData = await CreateDataV4Async("{\"user_guid\":\"" + userToken + "\"}", "getUserInfo", _auth);
             string request = await _api.SendRequestAsync(_url, createData.GetBytes());
             string response = JObject.Parse(request)["data_enc"].Crypto(true);
             JObject resObject = JObject.Parse(response);
@@ -137,7 +138,7 @@ public class Bot : IBot, IDisposable
     public async Task<string> GetGuidFromUserNameAsync(string userName)
         => await Task.Run(async () =>
         {
-            string v4Data = await CreateDataV4Async("{\"username\":\"" + userName + "\"}", "getObjectByUsername");
+            string v4Data = await CreateDataV4Async("{\"username\":\"" + userName + "\"}", "getObjectByUsername", _auth);
             string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
             string response = JObject.Parse(request)["data_enc"].Crypto(true);
             JObject resJson = JObject.Parse(response);
@@ -147,7 +148,7 @@ public class Bot : IBot, IDisposable
     public async Task DeleteMessageAsync(string messageId, string gapToken)
         => await Task.Run(async () =>
         {
-            string v4Data = await CreateDataV4Async("{\"message_ids\":[" + messageId + "],\"object_guid\":\"" + gapToken + "\",\"type\":\"Global\"}", "deleteMessages");
+            string v4Data = await CreateDataV4Async("{\"message_ids\":[" + messageId + "],\"object_guid\":\"" + gapToken + "\",\"type\":\"Global\"}", "deleteMessages", _auth);
             await _api.SendRequestAsync(_url, v4Data.GetBytes());
         });
 
@@ -165,7 +166,7 @@ public class Bot : IBot, IDisposable
                 if (replyId != null)
                     json.Add("reply_to_message_id", replyId);
 
-                string v4Data = await CreateDataV4Async(json.ToString(), "sendMessage");
+                string v4Data = await CreateDataV4Async(json.ToString(), "sendMessage", _auth);
                 await _api.SendRequestAsync(_url, v4Data.GetBytes());
             });
 
@@ -180,11 +181,11 @@ public class Bot : IBot, IDisposable
                     { "text", text },
                     { "message_id", messageId }
                 };
-                string v4Data = await CreateDataV4Async(json.ToString(), "editMessage");
+                string v4Data = await CreateDataV4Async(json.ToString(), "editMessage", _auth);
                 await _api.SendRequestAsync(_url, v4Data.GetBytes());
             });
 
-    public async Task SendLocationAsync(double x, double y, string gapToken)
+    public async Task SendLocationAsync(double lat, double lon, string gapToken)
         => await Task.Run(async () =>
         {
             JObject json = new()
@@ -192,16 +193,16 @@ public class Bot : IBot, IDisposable
                 { "is_mute", false },
                 { "object_guid", gapToken },
                 { "rnd", new Random().Next(100000000, 999999999) },
-                { "location", JObject.Parse("{\"latitude\":" + x + ",\"longitude\":" + y + "}") }
+                { "location", JObject.Parse("{\"latitude\":" + lat + ",\"longitude\":" + lon + "}") }
             };
-            string data = await CreateDataV4Async(json.ToString(), "sendMessage");
+            string data = await CreateDataV4Async(json.ToString(), "sendMessage", _auth);
             await _api.SendRequestAsync(_url, data.GetBytes());
         });
 
     public async Task<Message> GetMessageByIdAsync(string messageId, string gapToken)
             => await Task.Run(async () =>
             {
-                string v4Data = await CreateDataV4Async("{\"message_ids\":[\"" + messageId + "\"],\"object_guid\":\"" + gapToken + "\"}", "getMessagesByID");
+                string v4Data = await CreateDataV4Async("{\"message_ids\":[\"" + messageId + "\"],\"object_guid\":\"" + gapToken + "\"}", "getMessagesByID", _auth);
                 string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
                 string response = JObject.Parse(request)["data_enc"].Crypto(true);
                 JObject data = JObject.Parse(response);
@@ -225,7 +226,7 @@ public class Bot : IBot, IDisposable
                     { "group_guid", gapToken },
                     { "member_guid", userToken },
                 };
-                string v4Data = await CreateDataV4Async(json.ToString(), "banGroupMember");
+                string v4Data = await CreateDataV4Async(json.ToString(), "banGroupMember", _auth);
                 await _api.SendRequestAsync(_url, v4Data.GetBytes());
             });
 
@@ -238,7 +239,7 @@ public class Bot : IBot, IDisposable
                   { "group_guid", gapToken },
                   { "member_guid", userToken },
               };
-              string v4Data = await CreateDataV4Async(json.ToString(), "banGroupMember");
+              string v4Data = await CreateDataV4Async(json.ToString(), "banGroupMember", _auth);
               await _api.SendRequestAsync(_url, v4Data.GetBytes());
           });
 
@@ -257,7 +258,7 @@ public class Bot : IBot, IDisposable
                     { "member_guid", userToken },
                 };
 
-                string v5Data = await CreateDataV5Async(json.ToString(), "setGroupAdmin");
+                string v5Data = await CreateDataV5Async(json.ToString(), "setGroupAdmin", _auth);
                 await _api.SendRequestAsync(_url, v5Data.GetBytes());
             });
 
@@ -271,28 +272,28 @@ public class Bot : IBot, IDisposable
                 { "member_guid", adminToken },
             };
 
-            string v5Data = await CreateDataV5Async(json.ToString(), "setGroupAdmin");
+            string v5Data = await CreateDataV5Async(json.ToString(), "setGroupAdmin", _auth);
             await _api.SendRequestAsync(_url, v5Data.GetBytes());
         });
 
     public async Task ChangeGroupTimerAsync(int time, string gapToken)
         => await Task.Run(async () =>
         {
-            string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\",\"slow_mode\":" + time + ",\"updated_parameters\":[\"slow_mode\"]}", "editGroupInfo");
+            string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\",\"slow_mode\":" + time + ",\"updated_parameters\":[\"slow_mode\"]}", "editGroupInfo", _auth);
             await _api.SendRequestAsync(_url, v4Data.GetBytes());
         });
 
     public async Task ChangeGroupLinkAsync(string gapToken)
             => await Task.Run(async () =>
             {
-                string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "setGroupLink");
+                string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "setGroupLink", _auth);
                 await _api.SendRequestAsync(_url, v4Data.GetBytes());
             });
 
     public async Task<string> GetGroupLinkAsync(string gapToken)
             => await Task.Run(async () =>
             {
-                string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "getGroupLink");
+                string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "getGroupLink", _auth);
                 string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
                 string response = JObject.Parse(request)["data_enc"].Crypto(true);
                 JObject responseData = JObject.Parse(response);
@@ -303,7 +304,7 @@ public class Bot : IBot, IDisposable
             => await Task.Run(async () =>
             {
                 JObject input = JObject.Parse("{\"seen_list\" : {\"" + seenChat.GapToken + "\":\"" + seenChat.MessageId + "\"}}");
-                string v4Data = await CreateDataV4Async(input.ToString(), "seenChats");
+                string v4Data = await CreateDataV4Async(input.ToString(), "seenChats", _auth);
                 await _api.SendRequestAsync(_url, v4Data.GetBytes());
             });
 
@@ -316,7 +317,7 @@ public class Bot : IBot, IDisposable
                     {
                         { "state", timeStamp }
                     };
-                    string v4Data = await CreateDataV4Async(input.ToString(), "getChatsUpdates");
+                    string v4Data = await CreateDataV4Async(input.ToString(), "getChatsUpdates", _auth);
                     string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
                     JObject response = await _api.ConvertToJObjectAsync(request);
                     JArray chats = JArray.Parse(response["chats"].ToString());
@@ -331,42 +332,6 @@ public class Bot : IBot, IDisposable
                 }
             });
 
-    #region -- Data --
 
-    private async Task<string> CreateDataV4Async(string data, string method)
-       => await Task.Run(() =>
-           new JObject
-           {
-               { "api_version", "4" },
-               { "auth", _auth },
-               { "client", CreateClient() },
-               { "data_enc", data.Crypto(false) },
-               { "method", method }
-           }.ToString());
-
-    private async Task<string> CreateDataV5Async(string data, string method)
-        => await Task.Run(() =>
-        {
-            JObject json = new()
-            {
-                { "client", CreateClient() },
-                { "input", JObject.Parse(data) },
-                { "method", method }
-            };
-
-            string dataEnc = json.Crypto(false);
-
-            JObject jsonData = new()
-            {
-                { "api_version", 5 },
-                { "auth", _auth },
-                { "data_enc", dataEnc }
-            };
-            return jsonData.ToString();
-        });
-
-    private static JObject CreateClient()
-        => JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Web\"}");
-
-    #endregion
 }
+
