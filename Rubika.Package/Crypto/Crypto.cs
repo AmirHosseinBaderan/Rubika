@@ -55,4 +55,7 @@ internal static class CryptoEx
         return Convert.ToBase64String(transform);
     }
 
+    public static string Crypto(this JToken json, bool get)
+        => json.ToString().Crypto(get);
+
 }
