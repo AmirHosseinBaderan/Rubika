@@ -1,5 +1,7 @@
 ﻿namespace Rubika.Package.Bot;
 
+#region -- Models --
+
 public record Message
 {
     public string Id { get; set; }
@@ -38,3 +40,17 @@ public record AdminAccess
 
     public const string ChangeInfo = "ChangeInfo";
 }
+
+#endregion
+
+#region -- Response --
+
+public record GetMessage(ActionStatus Status, Message Message);
+
+public enum ActionStatus
+{
+    Success,
+    Exception
+}
+
+#endregion
