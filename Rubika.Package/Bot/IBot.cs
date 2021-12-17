@@ -29,7 +29,7 @@ public interface IBot
 
     Task UnRemoveUserAsync(string userToken, string gapToken);
 
-    Task NewAdminAsync(string userToken, string[] access, string gapToken);
+    Task NewAdminAsync(string userToken, IEnumerable<string> access, string gapToken);
 
     Task RemoveAdminAsync(string adminToken, string gapToken);
 

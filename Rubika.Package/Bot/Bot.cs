@@ -44,48 +44,47 @@ public class Bot : IBot, IDisposable
     }
 
     public void GetMessage()
-            => Task.Run(async () =>
+    {
+        string minId = GetMinIdAsync(_gapToken).Result;
+        JObject json = new()
+        {
+            { "limit", 10 },
+            { "min_id", minId },
+            { "object_guid", _gapToken },
+            { "sort", "FromMin" }
+        };
+
+        while (true)
+        {
+            string dataReq = CreateDataV4Async(json.ToString(), "getMessages").Result;
+            string req = _api.SendRequestAsync(_url, dataReq.GetBytes()).Result;
+            JObject decDataEnc = _api.ConvertToJObjectAsync(req).Result;
+            if (!decDataEnc.ContainsKey("err"))
             {
-                string minId = await GetMinIdAsync(_gapToken);
-                JObject json = new()
-                {
-                    { "limit", 10 },
-                    { "min_id", minId },
-                    { "object_guid", _gapToken },
-                    { "sort", "FromMin" }
-                };
-
-                while (true)
-                {
-                    string dataReq = await CreateDataV4Async(json.ToString(), "getMessages");
-                    string req = await _api.SendRequestAsync(_url, dataReq.GetBytes());
-                    JObject decDataEnc = await _api.ConvertToJObjectAsync(req);
-                    if (!decDataEnc.ContainsKey("err"))
+                JArray messages = JArray.Parse(decDataEnc["messages"].ToString());
+                foreach (JObject message in messages)
+                    if (!_messages.Any(m => m.Id == message.SelectToken("message_id").ToString()))
                     {
-                        JArray messages = JArray.Parse(decDataEnc["messages"].ToString());
-                        foreach (JObject message in messages)
-                            if (!_messages.Any(m => m.Id == message.SelectToken("message_id").ToString()))
-                            {
-                                Message newMessage = new()
-                                {
-                                    Id = message["message_id"].ToString(),
-                                    SenderToken = message["author_object_guid"].ToString()
-                                };
-                                if (message.ContainsKey("text"))
-                                    newMessage.Text = message["text"].ToString();
-                                if (message.ContainsKey("reply_to_message_id"))
-                                    newMessage.ReplyId = message["reply_to_message_id"].ToString();
+                        Message newMessage = new()
+                        {
+                            Id = message["message_id"].ToString(),
+                            SenderToken = message["author_object_guid"].ToString()
+                        };
+                        if (message.ContainsKey("text"))
+                            newMessage.Text = message["text"].ToString();
+                        if (message.ContainsKey("reply_to_message_id"))
+                            newMessage.ReplyId = message["reply_to_message_id"].ToString();
 
-                                _onGetMessage(newMessage);
-                                _messages.Add(newMessage);
-                            }
-
-                        json.Remove("min_id");
-                        json.Add("min_id", _messages[^1].Id);
+                        _onGetMessage(newMessage);
+                        _messages.Add(newMessage);
                     }
-                    Thread.Sleep(600);
-                }
-            }).Wait();
+
+                json.Remove("min_id");
+                json.Add("min_id", _messages[^1].Id);
+            }
+            Thread.Sleep(600);
+        }
+    }
 
     public async Task<string> GetMinIdAsync(string gapToken)
         => await Task.Run(async () =>
@@ -233,7 +232,7 @@ public class Bot : IBot, IDisposable
               await _api.SendRequestAsync(_url, v4Data.GetBytes());
           });
 
-    public async Task NewAdminAsync(string userToken, string[] access, string gapToken)
+    public async Task NewAdminAsync(string userToken, IEnumerable<string> access, string gapToken)
             => await Task.Run(async () =>
             {
                 JArray accessList = new();
