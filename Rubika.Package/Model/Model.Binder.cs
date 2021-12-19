@@ -57,7 +57,7 @@ internal class ModelBinder
             ObjectGuid = json["object_guid"]?.ToString(),
             Type = json["type"]?.ToString(),
             UpdateParameters = json["updated_parameters"] != null ?
-                JArray.Parse(json["updated_parameters"].ToString()).ToList().Select(up => up.ToString()) 
+                JArray.Parse(json["updated_parameters"].ToString()).ToList().Select(up => up.ToString())
                     : default,
         };
 

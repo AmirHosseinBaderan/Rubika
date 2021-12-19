@@ -1,6 +1,4 @@
-﻿using Rubika.Package.Model;
-
-namespace Rubika.Package.Bot;
+﻿namespace Rubika.Package.Bot;
 
 /// <summary>
 /// Rubika Bot Services Interface
