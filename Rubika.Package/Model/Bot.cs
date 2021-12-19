@@ -62,6 +62,21 @@ public record Chat
     public int TimeStamp { get; set; }
 }
 
+public record Channel
+{
+    public string CahnnelGuid { get; set; }
+
+    public string Title { get; set; }
+
+    public int Members { get; set; }
+
+    public string UserName { get; set; }
+
+    public string ShareLink { get; set; }
+
+    public string Type { get; set; }
+}
+
 public record ChatUpdate
 {
     public string ObjectGuid { get; set; }
@@ -109,6 +124,21 @@ public record GetUpdatesChats(ActionStatus Status, IEnumerable<Chat> Chats);
 public record GetGroupPreview(ActionStatus Status, GroupPreview Group);
 
 public record GetGroupInfo(ActionStatus Status, Chat Chat, GroupPreview Group);
+
+public record GetObjectByUserName
+{
+    public ActionStatus Status { get; set; }
+
+    public bool Exist { get; set; }
+
+    public string Type { get; set; }
+
+    public Chat Chat { get; set; }
+}
+
+public record GetUserByUserName(UserInof UserInof) : GetObjectByUserName;
+
+public record GetChannelByUserName(Channel Channel) : GetObjectByUserName;
 
 public enum ActionStatus
 {
