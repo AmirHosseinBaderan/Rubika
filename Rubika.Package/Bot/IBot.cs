@@ -27,7 +27,7 @@ public interface IBot
 
     Task EditMessageAsync(string text, string messageId, string gapToken);
 
-    Task SendLocationAsync(double lat, double lon, string gapToken);
+    Task<SendMessage> SendLocationAsync(double lat, double lon, string gapToken);
 
     Task<Message> GetMessageByIdAsync(string messageId, string gapToken);
 
@@ -49,13 +49,17 @@ public interface IBot
 
     Task<string> GetGroupLinkAsync(string gapToken);
 
-    void GetMessage();
-
-    #region -- Group --
-
     Task<GetGroupPreview> GetGroupPreviewByLinkAsync(string link);
 
     Task<GetGroupInfo> GetGroupInfoFromTokenAsync(string gapToken);
 
-    #endregion
+    Task<JObject> GetObjectByUserNameAsync(string userName);
+
+    Task<GetUserByUserName> GetUserByUserNameAsync(string userName);
+
+    Task<GetChannelByUserName> GetChannelByUserNameAsync(string userName);
+
+    void GetMessage();
+
+
 }
