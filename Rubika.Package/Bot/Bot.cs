@@ -43,7 +43,6 @@ public partial class Bot : IBot, IDisposable
                         if (!_messages.Any(m => m.Id == message["message_id"].ToString()))
                         {
                             Message newMessage = CreateMessage(message);
-
                             _onGetMessage(new(ActionStatus.Success, newMessage));
                             _messages.Add(newMessage);
                         }
@@ -73,15 +72,15 @@ public partial class Bot : IBot, IDisposable
     {
         string createData = await CreateDataV4Async("{\"user_guid\":\"" + userToken + "\"}", "getUserInfo", _auth);
         string request = await _api.SendRequestAsync(_url, createData.GetBytes());
-        string response = JObject.Parse(request)["data_enc"].ToString().Decrypt();
-        JObject resObject = JObject.Parse(response);
+        JObject resObject = await _api.ConvertToJObjectAsync(request);
         JToken user = resObject["user"];
         return new UserInof()
         {
             Name = user["first_name"]?.ToString(),
             LastName = user["last_name"]?.ToString(),
             Bio = user["bio"]?.ToString(),
-            UserName = user["username"]?.ToString()
+            UserName = user["username"]?.ToString(),
+            UserGuid = user["user_guid"]?.ToString()
         };
     });
 
@@ -90,8 +89,7 @@ public partial class Bot : IBot, IDisposable
         {
             string v4Data = await CreateDataV4Async("{\"username\":\"" + userName + "\"}", "getObjectByUsername", _auth);
             string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-            string response = JObject.Parse(request)["data_enc"].ToString().Decrypt();
-            JObject resJson = JObject.Parse(response);
+            JObject resJson = await _api.ConvertToJObjectAsync(request);
             return resJson["user"]["user_guid"].ToString();
         });
 
@@ -154,17 +152,9 @@ public partial class Bot : IBot, IDisposable
             {
                 string v4Data = await CreateDataV4Async("{\"message_ids\":[\"" + messageId + "\"],\"object_guid\":\"" + gapToken + "\"}", "getMessagesByID", _auth);
                 string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-                string response = JObject.Parse(request)["data_enc"].ToString().Decrypt();
-                JObject data = JObject.Parse(response);
+                JObject data = await _api.ConvertToJObjectAsync(request);
                 JToken message = JArray.Parse(data["messages"].ToString())[0];
-
-                return new Message()
-                {
-                    Id = message["message_id"].ToString(),
-                    Text = message["text"]?.ToString(),
-                    ReplyId = message["reply_to_message_id"]?.ToString(),
-                    SenderToken = message["author_object_guid"]?.ToString()
-                };
+                return CreateMessage(message.ToString());
             });
 
     public async Task RemoveUserAsync(string userToken, string gapToken)

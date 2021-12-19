@@ -7,11 +7,10 @@ public partial class Bot : IBot, IDisposable
          {
              string json = await CreateDataV4Async("{\"hash_link\":\"" + link.Replace("https://rubika.ir/joing/", "") + "\"}", "groupPreviewByJoinLink", _auth);
              string request = await _api.SendRequestAsync(_url, json.GetBytes());
-             JObject response = JObject.Parse(request);
+             JObject response = await _api.ConvertToJObjectAsync(request);
              if (!response.ContainsKey("err"))
              {
-                 JObject group = JObject.Parse(response["data_enc"].ToString().Decrypt());
-                 GroupPreview groupPreview = CreateGroupPreview(group);
+                 GroupPreview groupPreview = CreateGroupPreview(response["group"]);
                  return new GetGroupPreview(ActionStatus.Success, groupPreview);
              }
              return new GetGroupPreview(ActionStatus.Exception, null);
@@ -22,8 +21,7 @@ public partial class Bot : IBot, IDisposable
            {
                string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "getGroupLink", _auth);
                string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-               string response = JObject.Parse(request)["data_enc"].ToString().Decrypt();
-               JObject responseData = JObject.Parse(response);
+               JObject responseData = await _api.ConvertToJObjectAsync(request);
                return responseData["join_link"].ToString();
            });
 
