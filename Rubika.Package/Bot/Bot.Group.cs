@@ -19,6 +19,8 @@ public partial class Bot : IBot, IDisposable
     public async Task<string> GetGroupLinkAsync(string gapToken)
            => await Task.Run(async () =>
            {
+               if (gapToken == null) gapToken = _gapToken;
+
                string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "getGroupLink", _auth);
                string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
                JObject responseData = await _api.ConvertToJObjectAsync(request);
@@ -28,6 +30,8 @@ public partial class Bot : IBot, IDisposable
     public async Task ChangeGroupLinkAsync(string gapToken)
            => await Task.Run(async () =>
            {
+               if (gapToken == null) gapToken = _gapToken;
+
                string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "setGroupLink", _auth);
                await _api.SendRequestAsync(_url, v4Data.GetBytes());
            });
@@ -35,6 +39,8 @@ public partial class Bot : IBot, IDisposable
     public async Task ChangeGroupTimerAsync(int time, string gapToken)
             => await Task.Run(async () =>
             {
+                if (gapToken == null) gapToken = _gapToken;
+
                 string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\",\"slow_mode\":" + time + ",\"updated_parameters\":[\"slow_mode\"]}", "editGroupInfo", _auth);
                 await _api.SendRequestAsync(_url, v4Data.GetBytes());
             });
@@ -50,6 +56,8 @@ public partial class Bot : IBot, IDisposable
     public async Task<GetGroupInfo> GetGroupInfoFromTokenAsync(string gapToken)
             => await Task.Run(async () =>
             {
+                if (gapToken == null) gapToken = _gapToken;
+
                 string reqData = "{\"group_guid\":\"gToken\"}";
                 reqData = reqData.Replace("gToken", gapToken);
                 string strData = await CreateDataV4Async(reqData, "getGroupInfo", _auth);
