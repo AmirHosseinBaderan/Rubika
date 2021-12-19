@@ -64,12 +64,8 @@ public partial class Bot : IBot, IDisposable
     public async Task<string> GetMinIdAsync(string gapToken)
         => await Task.Run(async () =>
         {
-            string reqData = "{\"group_guid\":\"gToken\"}";
-            reqData = reqData.Replace("gToken", gapToken);
-            string strData = await CreateDataV4Async(reqData, "getGroupInfo", _auth);
-            string apiCall = await _api.SendRequestAsync(_url, strData.GetBytes());
-            JObject response = await _api.ConvertToJObjectAsync(apiCall);
-            return response["chat"]["last_message"]["message_id"].ToString();
+            GetGroupInfo groupInfo = await GetGroupInfoFromTokenAsync(gapToken);
+            return groupInfo.Status == ActionStatus.Success ? groupInfo.Chat.LastMessage.Id : "";
         });
 
     public async Task<UserInof> GetUserInfoAsync(string userToken)
@@ -101,7 +97,7 @@ public partial class Bot : IBot, IDisposable
 
     public async Task DeleteMessageAsync(string messageId, string gapToken)
         => await Task.Run(async () =>
-        {            
+        {
             string v4Data = await CreateDataV4Async("{\"message_ids\":[" + messageId + "],\"object_guid\":\"" + gapToken + "\",\"type\":\"Global\"}", "deleteMessages", _auth);
             await _api.SendRequestAsync(_url, v4Data.GetBytes());
         });
