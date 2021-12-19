@@ -28,6 +28,33 @@ internal class ModelBinder
             Description: json["description"]?.ToString(),
             ChatHistoryVisible: json["chat_history_for_new_members"]?.ToString());
 
+    public static SendMessage CreateSendMessage(JObject json)
+    {
+        return !json.ContainsKey("err")
+            ? (new(ActionStatus.Success, CreateChatUpdate(json["chat_update"]), CreateMessageUpdate(json["message_update"])))
+            : (new(ActionStatus.Exception, null, null));
+    }
+
+    public static ChatUpdate CreateChatUpdate(JToken json)
+        => new()
+        {
+            Action = json["action"]?.ToString(),
+            ObjectGuid = json["object_guid"]?.ToString(),
+            Type = json["type"]?.ToString(),
+            UpdateParameters = JArray.Parse(json["updated_parameters"].ToString()).ToList().Select(up => up.ToString()),
+        };
+
+    public static MessageUpdate CreateMessageUpdate(JToken json)
+        => new()
+        {
+            Action = json["action"]?.ToString(),
+            Id = json["message_id"]?.ToString(),
+            ObjectGuid = json["object_guid"]?.ToString(),
+            PervId = json["perv_message_id"]?.ToString(),
+            Type = json["type"]?.ToString(),
+            TimeStamp = json["state"]?.ToString(),
+            Message = CreateMessage(json["message"].ToString())
+        };
 
     public static Chat CreateChat(string json)
          => CreateChat(JObject.Parse(json.ToString()));
