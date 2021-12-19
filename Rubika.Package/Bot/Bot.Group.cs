@@ -48,4 +48,21 @@ public partial class Bot : IBot, IDisposable
            return group.Status == ActionStatus.Success ?
                    group.Group.GroupGuid : "";
        });
+
+    public async Task<GetGroupInfo> GetGroupInfoFromTokenAsync(string gapToken)
+            => await Task.Run(async () =>
+            {
+                string reqData = "{\"group_guid\":\"gToken\"}";
+                reqData = reqData.Replace("gToken", gapToken);
+                string strData = await CreateDataV4Async(reqData, "getGroupInfo", _auth);
+                string apiCall = await _api.SendRequestAsync(_url, strData.GetBytes());
+                JObject response = await _api.ConvertToJObjectAsync(apiCall);
+                if (!response.ContainsKey("err"))
+                {
+                    Chat chat = CreateChat(response["chat"]);
+                    GroupPreview group = CreateGroupPreview(response["group"]);
+                    return new GetGroupInfo(ActionStatus.Success, chat, group);
+                }
+                return new GetGroupInfo(ActionStatus.Exception, null, null);
+            });
 }
