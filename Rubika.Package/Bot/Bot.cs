@@ -1,38 +1,10 @@
-﻿using Rubika.Package.Model;
-using static Rubika.Package.Model.ModelBinder;
-
-namespace Rubika.Package.Bot;
+﻿namespace Rubika.Package.Bot;
 
 /// <summary>
 /// Rubika Bot Services Implement <see cref="IBot"/>
 /// </summary>
 public partial class Bot : IBot, IDisposable
 {
-
-    #region -- Depedency --
-
-    private Action<GetMessage> _onGetMessage;
-
-    private string _gapToken;
-
-    private readonly string _auth;
-
-    private readonly IApi _api;
-
-    private readonly List<Message> _messages;
-
-    private readonly string _url = "https://messengerg2c63.iranlms.ir";
-
-    public Bot(string auth)
-    {
-        _auth = auth;
-        _auth.CreateAndSetKey();
-        _messages = new();
-        _api = new Api.Api();
-    }
-
-    #endregion
-
     public async Task CreateBotAsync(Action<GetMessage> newMessage, string gapToken)
         => await Task.Run(() =>
         {
@@ -70,15 +42,7 @@ public partial class Bot : IBot, IDisposable
                     foreach (JObject message in messages)
                         if (!_messages.Any(m => m.Id == message["message_id"].ToString()))
                         {
-                            Message newMessage = new()
-                            {
-                                Id = message["message_id"].ToString(),
-                                SenderToken = message["author_object_guid"].ToString()
-                            };
-                            if (message.ContainsKey("text"))
-                                newMessage.Text = message["text"].ToString();
-                            if (message.ContainsKey("reply_to_message_id"))
-                                newMessage.ReplyId = message["reply_to_message_id"].ToString();
+                            Message newMessage = CreateMessage(message);
 
                             _onGetMessage(new(ActionStatus.Success, newMessage));
                             _messages.Add(newMessage);
@@ -97,7 +61,6 @@ public partial class Bot : IBot, IDisposable
         }
     }
 
-
     public async Task<string> GetMinIdAsync(string gapToken)
         => await Task.Run(async () =>
         {
@@ -109,45 +72,36 @@ public partial class Bot : IBot, IDisposable
             return response["chat"]["last_message"]["message_id"].ToString();
         });
 
-    public async Task<string> GetGroupTokenFromLinkAsync(string link)
-        => await Task.Run(async () =>
-        {
-            string json = await CreateDataV4Async("{\"hash_link\":\"" + link.Replace("https://rubika.ir/joing/", "") + "\"}", "groupPreviewByJoinLink", _auth);
-            string request = await _api.SendRequestAsync(_url, json.GetBytes());
-            JObject response = JObject.Parse(request);
-            return JObject.Parse(response["data_enc"].Crypto(true))["group"]["group_guid"].ToString();
-        });
-
     public async Task<UserInof> GetUserInfoAsync(string userToken)
-        => await Task.Run(async () =>
+    => await Task.Run(async () =>
+    {
+        string createData = await CreateDataV4Async("{\"user_guid\":\"" + userToken + "\"}", "getUserInfo", _auth);
+        string request = await _api.SendRequestAsync(_url, createData.GetBytes());
+        string response = JObject.Parse(request)["data_enc"].ToString().Decrypt();
+        JObject resObject = JObject.Parse(response);
+        JToken user = resObject["user"];
+        return new UserInof()
         {
-            string createData = await CreateDataV4Async("{\"user_guid\":\"" + userToken + "\"}", "getUserInfo", _auth);
-            string request = await _api.SendRequestAsync(_url, createData.GetBytes());
-            string response = JObject.Parse(request)["data_enc"].Crypto(true);
-            JObject resObject = JObject.Parse(response);
-            JToken user = resObject["user"];
-            return new UserInof()
-            {
-                Name = user["first_name"]?.ToString(),
-                LastName = user["last_name"]?.ToString(),
-                Bio = user["bio"]?.ToString(),
-                UserName = user["username"]?.ToString()
-            };
-        });
+            Name = user["first_name"]?.ToString(),
+            LastName = user["last_name"]?.ToString(),
+            Bio = user["bio"]?.ToString(),
+            UserName = user["username"]?.ToString()
+        };
+    });
 
     public async Task<string> GetGuidFromUserNameAsync(string userName)
         => await Task.Run(async () =>
         {
             string v4Data = await CreateDataV4Async("{\"username\":\"" + userName + "\"}", "getObjectByUsername", _auth);
             string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-            string response = JObject.Parse(request)["data_enc"].Crypto(true);
+            string response = JObject.Parse(request)["data_enc"].ToString().Decrypt();
             JObject resJson = JObject.Parse(response);
             return resJson["user"]["user_guid"].ToString();
         });
 
     public async Task DeleteMessageAsync(string messageId, string gapToken)
         => await Task.Run(async () =>
-        {
+        {            
             string v4Data = await CreateDataV4Async("{\"message_ids\":[" + messageId + "],\"object_guid\":\"" + gapToken + "\",\"type\":\"Global\"}", "deleteMessages", _auth);
             await _api.SendRequestAsync(_url, v4Data.GetBytes());
         });
@@ -204,7 +158,7 @@ public partial class Bot : IBot, IDisposable
             {
                 string v4Data = await CreateDataV4Async("{\"message_ids\":[\"" + messageId + "\"],\"object_guid\":\"" + gapToken + "\"}", "getMessagesByID", _auth);
                 string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-                string response = JObject.Parse(request)["data_enc"].Crypto(true);
+                string response = JObject.Parse(request)["data_enc"].ToString().Decrypt();
                 JObject data = JObject.Parse(response);
                 JToken message = JArray.Parse(data["messages"].ToString())[0];
 
@@ -276,30 +230,6 @@ public partial class Bot : IBot, IDisposable
             await _api.SendRequestAsync(_url, v5Data.GetBytes());
         });
 
-    public async Task ChangeGroupTimerAsync(int time, string gapToken)
-        => await Task.Run(async () =>
-        {
-            string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\",\"slow_mode\":" + time + ",\"updated_parameters\":[\"slow_mode\"]}", "editGroupInfo", _auth);
-            await _api.SendRequestAsync(_url, v4Data.GetBytes());
-        });
-
-    public async Task ChangeGroupLinkAsync(string gapToken)
-            => await Task.Run(async () =>
-            {
-                string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "setGroupLink", _auth);
-                await _api.SendRequestAsync(_url, v4Data.GetBytes());
-            });
-
-    public async Task<string> GetGroupLinkAsync(string gapToken)
-            => await Task.Run(async () =>
-            {
-                string v4Data = await CreateDataV4Async("{\"group_guid\":\"" + gapToken + "\"}", "getGroupLink", _auth);
-                string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
-                string response = JObject.Parse(request)["data_enc"].Crypto(true);
-                JObject responseData = JObject.Parse(response);
-                return responseData["join_linl"].ToString();
-            });
-
     public async Task SeenCahtAsync(SeenChat seenChat)
             => await Task.Run(async () =>
             {
@@ -323,7 +253,7 @@ public partial class Bot : IBot, IDisposable
                     JArray chats = JArray.Parse(response["chats"].ToString());
                     List<Chat> result = new();
                     foreach (JToken chat in chats)
-                        result.Add(ModelBinder.CreateChat(chat));
+                        result.Add(CreateChat(chat));
                     return new GetUpdatesChats(ActionStatus.Success, result);
                 }
                 catch
@@ -331,7 +261,5 @@ public partial class Bot : IBot, IDisposable
                     return new GetUpdatesChats(ActionStatus.Exception, null);
                 }
             });
-
-
 }
 
