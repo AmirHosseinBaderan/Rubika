@@ -62,6 +62,34 @@ public record Chat
     public int TimeStamp { get; set; }
 }
 
+public record ChatUpdate
+{
+    public string ObjectGuid { get; set; }
+
+    public string Action { get; set; }
+
+    public IEnumerable<string> UpdateParameters { get; set; }
+
+    public string Type { get; set; }
+}
+
+public record MessageUpdate
+{
+    public string Id { get; set; }
+
+    public string Action { get; set; }
+
+    public Message Message { get; set; }
+
+    public string PervId { get; set; }
+
+    public string ObjectGuid { get; set; }
+
+    public string Type { get; set; }
+
+    public string TimeStamp { get; set; }
+}
+
 public record GroupPreview(string GroupGuid, string Title, int Members, int SlowMode, string Description, string ChatHistoryVisible);
 
 public record SeenChat(string GapToken, string MessageId);
@@ -72,11 +100,13 @@ public record SeenChat(string GapToken, string MessageId);
 
 public record GetMessage(ActionStatus Status, Message Message);
 
+public record SendMessage(ActionStatus Status, ChatUpdate ChatUpdate, MessageUpdate MessageUpdate);
+
 public record GetUpdatesChats(ActionStatus Status, IEnumerable<Chat> Chats);
 
 public record GetGroupPreview(ActionStatus Status, GroupPreview Group);
 
-public record GetGroupInfo(ActionStatus Status,Chat Chat,GroupPreview Group);
+public record GetGroupInfo(ActionStatus Status, Chat Chat, GroupPreview Group);
 
 public enum ActionStatus
 {
