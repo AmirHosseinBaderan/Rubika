@@ -57,5 +57,7 @@ public interface IBot
 
     Task<GetGroupPreview> GetGroupPreviewByLinkAsync(string link);
 
+    Task<GetGroupInfo> GetGroupInfoFromTokenAsync(string gapToken);
+
     #endregion
 }
