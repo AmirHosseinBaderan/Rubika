@@ -35,13 +35,30 @@ internal class ModelBinder
             : (new(ActionStatus.Exception, null, null));
     }
 
+    public static DeleteMessage CreateDeleteMessage(JObject json)
+    {
+        if (!json.ContainsKey("err"))
+        {
+            JArray messages = JArray.Parse(json["message_updates"].ToString());
+            List<MessageUpdate> messageUpdates = new();
+            foreach (JObject msu in messages)
+                messageUpdates.Add(CreateMessageUpdate(msu));
+
+            return new(ActionStatus.Success, CreateChatUpdate(json["chat_update"]), messageUpdates);
+        }
+        return new(ActionStatus.Exception, null, null);
+
+    }
+
     public static ChatUpdate CreateChatUpdate(JToken json)
         => new()
         {
             Action = json["action"]?.ToString(),
             ObjectGuid = json["object_guid"]?.ToString(),
             Type = json["type"]?.ToString(),
-            UpdateParameters = JArray.Parse(json["updated_parameters"].ToString()).ToList().Select(up => up.ToString()),
+            UpdateParameters = json["updated_parameters"] != null ?
+                JArray.Parse(json["updated_parameters"].ToString()).ToList().Select(up => up.ToString()) 
+                    : default,
         };
 
     public static MessageUpdate CreateMessageUpdate(JToken json)
@@ -53,7 +70,9 @@ internal class ModelBinder
             PervId = json["perv_message_id"]?.ToString(),
             Type = json["type"]?.ToString(),
             TimeStamp = json["state"]?.ToString(),
-            Message = CreateMessage(json["message"].ToString())
+            Message = json["message"] != null
+                    ? CreateMessage(json["message"].ToString())
+                    : default
         };
 
     public static Chat CreateChat(string json)
