@@ -25,7 +25,7 @@ public interface IBot
 
     Task DeleteMessageAsync(string messageId, string gapToken);
 
-    Task SendMessageAsync(string text, string replyId, string gapToken);
+    Task<SendMessage> SendMessageAsync(string text, string replyId, string gapToken);
 
     Task EditMessageAsync(string text, string messageId, string gapToken);
 
@@ -47,7 +47,7 @@ public interface IBot
 
     Task SeenCahtAsync(SeenChat seenChat);
 
-    Task<GetUpdatesChats> GetChatsUpdatesAsync(string timeStamp);
+    Task<GetUpdatesChats> GetChatsUpdatesAsync(string timeStamp = null);
 
     Task<string> GetGroupLinkAsync(string gapToken);
 

@@ -100,7 +100,7 @@ public partial class Bot : IBot, IDisposable
             await _api.SendRequestAsync(_url, v4Data.GetBytes());
         });
 
-    public async Task SendMessageAsync(string text, string replyId, string gapToken)
+    public async Task<SendMessage> SendMessageAsync(string text, string replyId, string gapToken)
             => await Task.Run(async () =>
             {
                 JObject json = new()
@@ -115,7 +115,9 @@ public partial class Bot : IBot, IDisposable
                     json.Add("reply_to_message_id", replyId);
 
                 string v4Data = await CreateDataV4Async(json.ToString(), "sendMessage", _auth);
-                await _api.SendRequestAsync(_url, v4Data.GetBytes());
+                string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
+                JObject response = await _api.ConvertToJObjectAsync(request);
+                return CreateSendMessage(response);
             });
 
     public async Task EditMessageAsync(string text, string messageId, string gapToken)
@@ -224,9 +226,11 @@ public partial class Bot : IBot, IDisposable
                 await _api.SendRequestAsync(_url, v4Data.GetBytes());
             });
 
-    public async Task<GetUpdatesChats> GetChatsUpdatesAsync(string timeStamp)
+    public async Task<GetUpdatesChats> GetChatsUpdatesAsync(string timeStamp = null)
             => await Task.Run(async () =>
             {
+                if (timeStamp == null)
+                    timeStamp = ((int)DateTime.Now.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString();
                 try
                 {
                     JObject input = new()
