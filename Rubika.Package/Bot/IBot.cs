@@ -52,4 +52,10 @@ public interface IBot
     Task<string> GetGroupLinkAsync(string gapToken);
 
     void GetMessage();
+
+    #region -- Group --
+
+    Task<GetGroupPreview> GetGroupPreviewByLinkAsync(string link);
+
+    #endregion
 }
