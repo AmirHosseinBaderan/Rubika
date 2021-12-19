@@ -99,7 +99,7 @@ internal class ModelBinder
             CountUnseen = int.Parse(json["count_unseen"]?.ToString() ?? "0"),
             IsPined = bool.Parse(json["is_pinned"]?.ToString() ?? "false"),
             IsMute = bool.Parse(json["is_mute"]?.ToString() ?? "false"),
-            LastMessage = ModelBinder.CreateMessage(json["last_message"].ToString()),
+            LastMessage = json["last_message"] != null ? CreateMessage(json["last_message"].ToString()) : default,
             Access = JArray.Parse(json["access"].ToString()).ToList().Select(acc => acc.ToString()),
             Status = json["status"]?.ToString(),
         };
