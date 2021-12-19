@@ -22,6 +22,8 @@ public record UserInof
     public string Bio { get; set; }
 
     public string UserName { get; set; }
+
+    public string UserGuid { get; set; }
 }
 
 public record AdminAccess
