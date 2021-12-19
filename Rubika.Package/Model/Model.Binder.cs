@@ -3,15 +3,26 @@
 internal class ModelBinder
 {
     public static Message CreateMessage(string json)
+        => CreateMessage(JObject.Parse(json));
+
+    public static Message CreateMessage(JObject json)
+         => new()
+         {
+             Id = json["message_id"]?.ToString(),
+             Text = json["text"]?.ToString(),
+             ReplyId = json["reply_to_message_id"]?.ToString(),
+             SenderToken = json["author_object_guid"]?.ToString()
+         };
+
+    public static GroupPreview CreateGroupPreview(JObject json)
     {
-        JObject jObject = JObject.Parse(json);
-        return new Message
-        {
-            Id = jObject["message_id"]?.ToString(),
-            Text = jObject["text"]?.ToString(),
-            ReplyId = jObject["reply_to_message_id"]?.ToString(),
-            SenderToken = jObject["author_object_guid"]?.ToString()
-        };
+        JToken group = json["group"];
+        return new(GroupGuid: group["group_guid"]?.ToString(),
+            Title: group["group_title"]?.ToString(),
+            Members: int.Parse(group["count_member"]?.ToString() ?? "0"),
+            SlowMode: int.Parse(group["slow_mode"]?.ToString() ?? "0"),
+            Description: group["description"]?.ToString(),
+            ChatHistoryVisible: bool.Parse(group["chat_history_for_new_members"]?.ToString() ?? "false"));
     }
 
     public static Chat CreateChat(string json)
@@ -35,40 +46,44 @@ internal class ModelBinder
 
     #region -- Data --
 
-    public static async Task<string> CreateDataV4Async(string data, string method,string auth)
+    public static async Task<string> CreateDataV4Async(string data, string method, string auth)
        => await Task.Run(() =>
            new JObject
            {
                { "api_version", "4" },
                { "auth", auth },
                { "client", CreateClient() },
-               { "data_enc", data.Crypto(false) },
+               { "data_enc", data.Encrypt() },
                { "method", method }
            }.ToString());
 
-    public static async Task<string> CreateDataV5Async(string data, string method,string auth)
+    public static async Task<string> CreateDataV5Async(string data, string method, string auth)
         => await Task.Run(() =>
         {
-            JObject json = new()
+            string json = new JObject()
             {
                 { "client", CreateClient() },
                 { "input", JObject.Parse(data) },
                 { "method", method }
-            };
+            }.ToString().Encrypt();
 
-            string dataEnc = json.Crypto(false);
-
-            JObject jsonData = new()
+            return new JObject
             {
                 { "api_version", 5 },
                 { "auth", auth },
-                { "data_enc", dataEnc }
-            };
-            return jsonData.ToString();
+                { "data_enc", json }
+            }.ToString();
         });
 
     private static JObject CreateClient()
-        => JObject.Parse("{\"app_name\":\"Main\",\"app_version\":\"2.8.1\",\"lang_code\":\"fa\",\"package\":\"ir.resaneh1.iptv\",\"platform\":\"Web\"}");
+        => new()
+        {
+            { "app_name", "Main" },
+            { "app_version", "2.8.1" },
+            { "lang_code", "fa" },
+            { "package", "ir.resaneh1.iptv" },
+            { "platform", "Web" }
+        };
 
     #endregion
 }
