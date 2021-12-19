@@ -39,12 +39,6 @@ internal static class CryptoEx
 
     public static byte[] GetBytes(this string str) => UTF8.GetBytes(str);
 
-    public static string Crypto(this string data, bool get)
-            => get ? data.Decrypt() : data.Encrypt();
-
-    public static string Crypto(this JToken json, bool get)
-        => json.ToString().Crypto(get);
-
     public static string Encrypt(this string data)
     {
         byte[] f = data.GetBytes();
