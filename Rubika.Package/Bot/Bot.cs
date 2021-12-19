@@ -39,16 +39,19 @@ public partial class Bot : IBot, IDisposable
                 if (!decDataEnc.ContainsKey("err"))
                 {
                     JArray messages = JArray.Parse(decDataEnc["messages"].ToString());
-                    foreach (JObject message in messages)
-                        if (!_messages.Any(m => m.Id == message["message_id"].ToString()))
-                        {
-                            Message newMessage = CreateMessage(message);
-                            _onGetMessage(new(ActionStatus.Success, newMessage));
-                            _messages.Add(newMessage);
-                        }
+                    if (messages.Count > 0)
+                    {
+                        foreach (JObject message in messages)
+                            if (!_messages.Any(m => m.Id == message["message_id"].ToString()))
+                            {
+                                Message newMessage = CreateMessage(message);
+                                _onGetMessage(new(ActionStatus.Success, newMessage));
+                                _messages.Add(newMessage);
+                            }
 
-                    json.Remove("min_id");
-                    json.Add("min_id", _messages[^1].Id);
+                        json.Remove("min_id");
+                        json.Add("min_id", _messages[^1].Id);
+                    }
                 }
             }
             catch
@@ -93,11 +96,20 @@ public partial class Bot : IBot, IDisposable
             return resJson["user"]["user_guid"].ToString();
         });
 
-    public async Task DeleteMessageAsync(string messageId, string gapToken)
+    public async Task<DeleteMessage> DeleteMessageAsync(IEnumerable<string> messagesId, string gapToken)
         => await Task.Run(async () =>
         {
-            string v4Data = await CreateDataV4Async("{\"message_ids\":[" + messageId + "],\"object_guid\":\"" + gapToken + "\",\"type\":\"Global\"}", "deleteMessages", _auth);
-            await _api.SendRequestAsync(_url, v4Data.GetBytes());
+            string msgIds = string.Join(",", messagesId);
+            string json = new JObject
+            {
+                {"message_ids",JArray.Parse($"[{msgIds}]") },
+                {"object_guid",gapToken },
+                {"type","Global" }
+            }.ToString();
+            string v4Data = await CreateDataV4Async(json, "deleteMessages", _auth);
+            string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
+            JObject response = await _api.ConvertToJObjectAsync(request);
+            return CreateDeleteMessage(response);
         });
 
     public async Task<SendMessage> SendMessageAsync(string text, string replyId, string gapToken)

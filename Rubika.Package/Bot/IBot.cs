@@ -23,7 +23,7 @@ public interface IBot
 
     Task<string> GetGuidFromUserNameAsync(string userName);
 
-    Task DeleteMessageAsync(string messageId, string gapToken);
+    Task<DeleteMessage> DeleteMessageAsync(IEnumerable<string> messageIds, string gapToken);
 
     Task<SendMessage> SendMessageAsync(string text, string replyId, string gapToken);
 
