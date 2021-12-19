@@ -60,6 +60,8 @@ public record Chat
     public int TimeStamp { get; set; }
 }
 
+public record GroupPreview(string GroupGuid, string Title, int Members, int SlowMode, string Description, bool ChatHistoryVisible);
+
 public record SeenChat(string GapToken, string MessageId);
 
 #endregion
@@ -68,7 +70,9 @@ public record SeenChat(string GapToken, string MessageId);
 
 public record GetMessage(ActionStatus Status, Message Message);
 
-public record GetUpdatesChats(ActionStatus Status,IEnumerable<Chat> Chats);
+public record GetUpdatesChats(ActionStatus Status, IEnumerable<Chat> Chats);
+
+public record GetGroupPreview(ActionStatus Status, GroupPreview Group);
 
 public enum ActionStatus
 {
