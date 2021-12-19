@@ -17,13 +17,17 @@ internal class ModelBinder
     public static GroupPreview CreateGroupPreview(JObject json)
     {
         JToken group = json["group"];
-        return new(GroupGuid: group["group_guid"]?.ToString(),
-            Title: group["group_title"]?.ToString(),
-            Members: int.Parse(group["count_member"]?.ToString() ?? "0"),
-            SlowMode: int.Parse(group["slow_mode"]?.ToString() ?? "0"),
-            Description: group["description"]?.ToString(),
-            ChatHistoryVisible: bool.Parse(group["chat_history_for_new_members"]?.ToString() ?? "false"));
+        return CreateGroupPreview(group);
     }
+
+    public static GroupPreview CreateGroupPreview(JToken json)
+        => new(GroupGuid: json["group_guid"]?.ToString(),
+            Title: json["group_title"]?.ToString(),
+            Members: int.Parse(json["count_members"]?.ToString() ?? "0"),
+            SlowMode: int.Parse(json["slow_mode"]?.ToString() ?? "0"),
+            Description: json["description"]?.ToString(),
+            ChatHistoryVisible: json["chat_history_for_new_members"]?.ToString());
+
 
     public static Chat CreateChat(string json)
          => CreateChat(JObject.Parse(json.ToString()));
