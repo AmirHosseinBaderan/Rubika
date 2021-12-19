@@ -75,8 +75,18 @@ internal class ModelBinder
                     : default
         };
 
+    public static UserInof CreateUserInfo(JToken user)
+        => new()
+        {
+            Name = user["first_name"]?.ToString(),
+            LastName = user["last_name"]?.ToString(),
+            Bio = user["bio"]?.ToString(),
+            UserName = user["username"]?.ToString(),
+            UserGuid = user["user_guid"]?.ToString()
+        };
+
     public static Chat CreateChat(string json)
-         => CreateChat(JObject.Parse(json.ToString()));
+             => CreateChat(JObject.Parse(json.ToString()));
 
     public static Chat CreateChat(JToken json)
             => CreateChat(JObject.Parse(json.ToString()));
@@ -92,6 +102,17 @@ internal class ModelBinder
             LastMessage = ModelBinder.CreateMessage(json["last_message"].ToString()),
             Access = JArray.Parse(json["access"].ToString()).ToList().Select(acc => acc.ToString()),
             Status = json["status"]?.ToString(),
+        };
+
+    public static Channel CreateChannel(JToken channel)
+        => new()
+        {
+            CahnnelGuid = channel["channel_guid"]?.ToString(),
+            ShareLink = channel["share_url"]?.ToString(),
+            Title = channel["channel_title"]?.ToString(),
+            Type = channel["channel_type"]?.ToString(),
+            UserName = channel["username"]?.ToString(),
+            Members = int.Parse(channel["count_members"]?.ToString() ?? "0"),
         };
 
     #region -- Data --
