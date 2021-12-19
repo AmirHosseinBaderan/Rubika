@@ -102,6 +102,8 @@ public record GetMessage(ActionStatus Status, Message Message);
 
 public record SendMessage(ActionStatus Status, ChatUpdate ChatUpdate, MessageUpdate MessageUpdate);
 
+public record DeleteMessage(ActionStatus Status, ChatUpdate ChatUpdate, IEnumerable<MessageUpdate> MessageUpdate);
+
 public record GetUpdatesChats(ActionStatus Status, IEnumerable<Chat> Chats);
 
 public record GetGroupPreview(ActionStatus Status, GroupPreview Group);
