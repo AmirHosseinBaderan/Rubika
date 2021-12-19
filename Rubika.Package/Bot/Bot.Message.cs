@@ -5,6 +5,8 @@ public partial class Bot : IBot, IDisposable
     public async Task<DeleteMessage> DeleteMessageAsync(IEnumerable<string> messagesId, string gapToken)
        => await Task.Run(async () =>
        {
+           if (gapToken == null) gapToken = _gapToken;
+
            string msgIds = string.Join(",", messagesId);
            string json = new JObject
            {
@@ -21,6 +23,8 @@ public partial class Bot : IBot, IDisposable
     public async Task<SendMessage> SendMessageAsync(string text, string replyId, string gapToken)
            => await Task.Run(async () =>
            {
+               if (gapToken == null) gapToken = _gapToken;
+
                JObject json = new()
                {
                    { "is_mute", false },
@@ -41,6 +45,8 @@ public partial class Bot : IBot, IDisposable
     public async Task EditMessageAsync(string text, string messageId, string gapToken)
            => await Task.Run(async () =>
            {
+               if (gapToken == null) gapToken = _gapToken;
+
                JObject json = new()
                {
                    { "is_mute", false },
@@ -53,23 +59,35 @@ public partial class Bot : IBot, IDisposable
                await _api.SendRequestAsync(_url, v4Data.GetBytes());
            });
 
-    public async Task SendLocationAsync(double lat, double lon, string gapToken)
+    public async Task<SendMessage> SendLocationAsync(double lat, double lon, string gapToken)
        => await Task.Run(async () =>
        {
-           JObject json = new()
+           if (gapToken == null) gapToken = _gapToken;
+
+           string json = new JObject
            {
                { "is_mute", false },
                { "object_guid", gapToken },
                { "rnd", new Random().Next(100000000, 999999999) },
-               { "location", JObject.Parse("{\"latitude\":" + lat + ",\"longitude\":" + lon + "}") }
-           };
-           string data = await CreateDataV4Async(json.ToString(), "sendMessage", _auth);
-           await _api.SendRequestAsync(_url, data.GetBytes());
+               {
+                   "location",
+                   new JObject {
+                       { "latitude",lat},
+                       { "longitude",lon}
+                   }.ToString()
+               }
+           }.ToString();
+           string data = await CreateDataV4Async(json, "sendMessage", _auth);
+           string request = await _api.SendRequestAsync(_url, data.GetBytes());
+           JObject response = await _api.ConvertToJObjectAsync(request);
+           return CreateSendMessage(response);
        });
 
     public async Task<Message> GetMessageByIdAsync(string messageId, string gapToken)
             => await Task.Run(async () =>
             {
+                if (gapToken == null) gapToken = _gapToken;
+
                 string v4Data = await CreateDataV4Async("{\"message_ids\":[\"" + messageId + "\"],\"object_guid\":\"" + gapToken + "\"}", "getMessagesByID", _auth);
                 string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
                 JObject data = await _api.ConvertToJObjectAsync(request);
