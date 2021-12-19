@@ -8,7 +8,7 @@ internal class Api : IApi, IDisposable
                 if (response != "")
                 {
                     JObject resObject = JObject.Parse(response);
-                    string encData = resObject["data_enc"].ToString().Crypto(true);
+                    string encData = resObject["data_enc"].ToString().Decrypt();
                     return JObject.Parse(encData);
                 }
                 return new JObject()
