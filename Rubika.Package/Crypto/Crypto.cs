@@ -39,6 +39,8 @@ internal static class CryptoEx
 
     public static byte[] GetBytes(this string str) => UTF8.GetBytes(str);
 
+    public static string GetString(this byte[] bytes) => UTF8.GetString(bytes);
+
     public static string Encrypt(this string data)
     {
         byte[] f = data.GetBytes();

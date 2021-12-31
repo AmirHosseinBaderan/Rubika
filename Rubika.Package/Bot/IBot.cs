@@ -12,7 +12,7 @@ public interface IBot
     /// <param name="gapToken">Gap Token</param>
     /// <returns><see cref="Package.Bot.GetMessage"/></returns>
     Task CreateBotAsync(Action<GetMessage> message, string gapToken);
-
+    
     Task<string> GetMinIdAsync(string gapToken);
 
     Task<string> GetGroupTokenFromLinkAsync(string link);

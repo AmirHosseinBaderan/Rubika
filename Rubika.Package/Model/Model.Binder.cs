@@ -11,7 +11,8 @@ internal class ModelBinder
              Id = json["message_id"]?.ToString(),
              Text = json["text"]?.ToString(),
              ReplyId = json["reply_to_message_id"]?.ToString(),
-             SenderToken = json["author_object_guid"]?.ToString()
+             SenderToken = json["author_object_guid"]?.ToString(),
+             Type = json["type"]?.ToString(),
          };
 
     public static GroupPreview CreateGroupPreview(JObject json)

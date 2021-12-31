@@ -18,7 +18,8 @@ public partial class Bot : IBot, IDisposable
             string v4Data = await CreateDataV4Async("{\"username\":\"" + userName + "\"}", "getObjectByUsername", _auth);
             string request = await _api.SendRequestAsync(_url, v4Data.GetBytes());
             JObject resJson = await _api.ConvertToJObjectAsync(request);
-            return resJson["user"]["user_guid"].ToString();
+            return !resJson.ContainsKey("err") ?
+                resJson["user"]["user_guid"].ToString() : "";
         });
 
     public async Task RemoveUserAsync(string userToken, string gapToken)

@@ -1,4 +1,7 @@
-﻿namespace Rubika.Package.Bot;
+﻿using Microsoft.AspNetCore.TestHost;
+using System.Net.WebSockets;
+
+namespace Rubika.Package.Bot;
 
 public partial class Bot : IBot, IDisposable
 {
@@ -15,8 +18,16 @@ public partial class Bot : IBot, IDisposable
 
     private readonly string _url = "https://messengerg2c63.iranlms.ir";
 
+    private readonly string _wsUrl = "wss://jsocket5.iranlms.ir:80";
+
+    private readonly ClientWebSocket _clientWS;
+
+    private readonly CancellationTokenSource _cancellationTokenSource;
+
     public Bot(string auth)
     {
+        _clientWS = new();
+        _cancellationTokenSource = new();
         _auth = auth;
         _auth.CreateAndSetKey();
         _messages = new();

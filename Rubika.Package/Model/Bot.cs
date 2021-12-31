@@ -11,6 +11,8 @@ public record Message
     public string ReplyId { get; set; }
 
     public string SenderToken { get; set; }
+
+    public string Type { get; set; }
 }
 
 public record UserInof
